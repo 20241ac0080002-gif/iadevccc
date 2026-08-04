@@ -2,94 +2,179 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Meu Chatbot na Nuvem</title>
+    <title>SaaS Seguro - Assistente IA</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #f4f4f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
-        .chat-container { background: white; width: 400px; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-        .historico { height: 350px; overflow-y: auto; background: #eef2f3; padding: 10px; border-radius: 5px; margin-bottom: 10px; display: flex; flex-direction: column; }
-        .mensagem { margin-bottom: 10px; padding: 10px; border-radius: 5px; max-width: 85%; word-wrap: break-word; }
-        .user { background: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
-        .bot { background: #ddd; color: black; align-self: flex-start; border-bottom-left-radius: 0; line-height: 1.4; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f2f5; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; }
+        .container { background: white; width: 450px; padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
         
-        /* Ajustes de CSS para o Markdown ficar bonito */
-        .bot p { margin: 0 0 10px 0; }
-        .bot p:last-child { margin: 0; }
-        .bot pre { background: #2b2b2b; color: #f8f8f2; padding: 10px; border-radius: 5px; overflow-x: auto; margin-top: 5px;}
-        .bot code { font-family: monospace; background: #cce; padding: 2px 4px; border-radius: 3px; }
-        .bot ul { margin: 5px 0; padding-left: 20px; }
+        /* Telas */
+        #tela-login { display: block; }
+        #tela-chat { display: none; }
 
-        .input-group { display: flex; gap: 5px; margin-bottom: 10px; }
-        input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 5px; }
-        button { padding: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #218838; }
-        .btn-danger { background: #dc3545; width: 100%; margin-top: 5px; }
-        .btn-danger:hover { background: #c82333; }
+        /* Estilo Form */
+        h2 { color: #333; text-align: center; margin-bottom: 20px; }
+        input { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; margin-top: 10px; }
+        
+        .btn-success { background: #28a745; color: white; }
+        .btn-success:hover { background: #218838; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-primary:hover { background: #0069d9; }
+        .btn-danger { background: #dc3545; color: white; margin-top: 15px; }
+
+        /* Chat Histórico */
+        .historico { height: 300px; overflow-y: auto; background: #f8f9fa; padding: 15px; border-radius: 10px; border: 1px solid #eee; margin-bottom: 15px; display: flex; flex-direction: column; }
+        .mensagem { margin-bottom: 12px; padding: 10px; border-radius: 10px; max-width: 85%; line-height: 1.4; }
+        .user { background: #007bff; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .bot { background: #e9ecef; color: #333; align-self: flex-start; border-bottom-left-radius: 0; }
+        
+        .user-info { font-size: 0.9em; color: #666; margin-bottom: 10px; text-align: right; }
     </style>
-    <!-- IMPORTANDO O MARKED.JS PARA RENDERIZAR NEGRITO, CÓDIGO, ETC -->
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
-    <div class="chat-container">
-        <h2>🤖 Assistente IA</h2>
-        <div class="historico" id="historico"></div>
-        <div class="input-group">
-            <input type="text" id="pergunta" placeholder="Digite sua pergunta..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
-            <button onclick="enviarMensagem()">Enviar</button>
+
+    <div class="container">
+        <!-- TELA DE LOGIN / CADASTRO -->
+        <div id="tela-login">
+            <h2>🔐 Acesso ao SaaS</h2>
+            <input type="text" id="nome" placeholder="Seu Nome (apenas para cadastro)">
+            <input type="email" id="email" placeholder="E-mail">
+            <input type="password" id="senha" placeholder="Senha">
+            <button class="btn-primary" onclick="fazerLogin()">Entrar</button>
+            <button class="btn-success" onclick="fazerCadastro()">Criar Nova Conta</button>
         </div>
-        <button class="btn-danger" onclick="apagarMemoria()">🗑️ Apagar Memória</button>
+
+        <!-- TELA DO CHAT (SÓ APARECE APÓS LOGIN) -->
+        <div id="tela-chat">
+            <div class="user-info">Conectado como: <b id="nome-usuario">...</b> | <a href="#" onclick="logout()">Sair</a></div>
+            <h2>🤖 Assistente IA</h2>
+            <div class="historico" id="historico"></div>
+            <div style="display: flex; gap: 5px;">
+                <input type="text" id="pergunta" placeholder="Digite sua dúvida..." onkeypress="if(event.key === 'Enter') enviarMensagem()">
+                <button class="btn-primary" onclick="enviarMensagem()" style="width: 80px; margin: 0;">Enviar</button>
+            </div>
+            <button class="btn-danger" onclick="apagarMemoria()">🗑️ Limpar Memória</button>
+        </div>
     </div>
 
     <script>
-        // ATENÇÃO: COLE A URL DO SEU RENDER AQUI (Sem a barra no final)
-        const URL_BACKEND = "http://localhost:3000";// <--- COLOQUE SEU LINK AQUI!!!
+        const URL_BACKEND = "http://localhost:3000";
+
+        // Verifica se já existe um token ao abrir a página
+        window.onload = () => {
+            const token = localStorage.getItem('token_saas');
+            const nome = localStorage.getItem('nome_usuario');
+            if(token) {
+                mostrarChat(nome);
+            }
+        };
+
+        function mostrarChat(nome) {
+            document.getElementById("tela-login").style.display = "none";
+            document.getElementById("tela-chat").style.display = "block";
+            document.getElementById("nome-usuario").innerText = nome;
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        async function fazerCadastro() {
+            const nome = document.getElementById("nome").value;
+            const email = document.getElementById("email").value;
+            const senha = document.getElementById("senha").value;
+
+            if(!nome || !email || !senha) return alert("Preencha todos os campos para cadastrar!");
+
+            try {
+                const res = await fetch(`${URL_BACKEND}/api/auth/register`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ nome, email, senha })
+                });
+                const dados = await res.json();
+                alert(dados.mensagem || dados.erro);
+            } catch (err) {
+                alert("Erro ao conectar com o servidor.");
+            }
+        }
+
+        async function fazerLogin() {
+            const email = document.getElementById("email").value;
+            const senha = document.getElementById("senha").value;
+
+            try {
+                const res = await fetch(`${URL_BACKEND}/api/auth/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email, senha })
+                });
+                const dados = await res.json();
+
+                if (dados.token) {
+                    localStorage.setItem('token_saas', dados.token);
+                    localStorage.setItem('nome_usuario', dados.nome);
+                    mostrarChat(dados.nome);
+                } else {
+                    alert(dados.erro || "Falha no login");
+                }
+            } catch (err) {
+                alert("Erro ao processar login.");
+            }
+        }
 
         async function enviarMensagem() {
             const input = document.getElementById("pergunta");
             const historico = document.getElementById("historico");
-            const texto = input.value;
+            const token = localStorage.getItem('token_saas');
 
-            if(!texto) return;
+            if(!input.value) return;
 
-            // 1. Mostra a mensagem do usuário na tela
-            historico.innerHTML += `<div class="mensagem user">${texto}</div>`;
+            // Interface
+            historico.innerHTML += `<div class="mensagem user">${input.value}</div>`;
+            const pergunta = input.value;
             input.value = "";
             historico.innerHTML += `<div class="mensagem bot" id="loading">Pensando...</div>`;
             historico.scrollTop = historico.scrollHeight;
 
             try {
-                // 2. Faz o Fetch (POST) para a SUA API na Nuvem
                 const resposta = await fetch(`${URL_BACKEND}/api/chat`, {
                     method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ pergunta: texto })
+                    headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}` // <--- ENVIANDO O TOKEN
+                    },
+                    body: JSON.stringify({ pergunta: pergunta })
                 });
 
-                const dados = await resposta.json();
+                if(resposta.status === 401) {
+                    alert("Sua sessão expirou. Faça login novamente.");
+                    logout();
+                    return;
+                }
 
-                // 3. Remove o "Pensando..." e mostra a resposta real
+                const dados = await resposta.json();
                 document.getElementById("loading").remove();
-                
-                // UPGRADE SPRINT 0: Converte o Markdown da IA para HTML formatado!
-                const respostaFormatada = marked.parse(dados.resposta);
-                
-                historico.innerHTML += `<div class="mensagem bot">${respostaFormatada}</div>`;
+                historico.innerHTML += `<div class="mensagem bot">${marked.parse(dados.resposta)}</div>`;
                 historico.scrollTop = historico.scrollHeight;
 
             } catch (erro) {
-                document.getElementById("loading").innerHTML = "Erro de conexão com o Servidor ❌";
+                document.getElementById("loading").innerHTML = "Erro de conexão ❌";
             }
         }
 
         async function apagarMemoria() {
-            if(!confirm("Tem certeza que deseja apagar toda a memória da IA?")) return;
+            if(!confirm("Apagar memória da IA?")) return;
+            const token = localStorage.getItem('token_saas');
             
-            try {
-                await fetch(`${URL_BACKEND}/api/chat/limpar`, { method: 'DELETE' });
-                document.getElementById("historico").innerHTML = ""; // Limpa a tela
-                alert("Memória formatada! A IA esqueceu tudo. 🧹");
-            } catch (erro) {
-                alert("Erro ao tentar apagar a memória do servidor.");
-            }
+            await fetch(`${URL_BACKEND}/api/chat/limpar`, { 
+                method: 'DELETE',
+                headers: { "Authorization": `Bearer ${token}` }
+            });
+            document.getElementById("historico").innerHTML = "";
+            alert("Memória limpa!");
         }
     </script>
 </body>
